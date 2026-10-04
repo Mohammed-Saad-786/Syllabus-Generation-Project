@@ -106,6 +106,8 @@ STRICT FORMATTING RULES
    "{example_unit_style}"
    Cover the subject matter progressively from foundational (Unit I) to advanced (last unit), and make sure the
    total content is realistic for a {data.get('duration_weeks')}-week, {data.get('credits')}-credit course.
+   Do NOT abbreviate, shorten, truncate, or drop sub-topics to save space, even with {unit_count} units to
+   cover — every unit must be fully detailed. It is fine for the response to be long.
 6. "assignments": exactly 5 short, practical, unit-specific assignment tasks per unit (things a student can actually
    do - implement, design, compare, report, demonstrate).
 7. "unit_tests": exactly 2 unit-test exam questions per unit, written in formal exam language (e.g. "Explain ... with
@@ -160,7 +162,7 @@ def call_llm(prompt):
             {"role": "user", "content": prompt},
         ],
         "temperature": 0.4,
-        "max_tokens": 4000,
+        "max_tokens": 8000,
     }
 
     resp = requests.post(url, headers=headers, json=payload, timeout=LLM_TIMEOUT)
