@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Syllabus Generation — AI Course Syllabus Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<!-- ===== ROBOT INTRO OVERLAY ===== -->
+
+<div id="intro-overlay" class="intro-overlay">
+
+  <div class="intro-card">
+
+    <!-- ============================= -->
+    <!-- CUTE FLOATING ROBOT -->
+    <!-- ============================= -->
+
+    <div class="cute-robot">
+
+      <!-- Floating animation wrapper -->
+      <div class="robot-float">
+
+        <!-- ===== HEAD ===== -->
+
+        <div class="robot-head">
+
+          <!-- Face screen -->
+          <div class="robot-screen">
+
+            <div class="robot-eyes">
+
+              <span class="robot-eye left-eye"></span>
+
+              <span class="robot-eye right-eye"></span>
+
+            </div>
+
+            <!-- Smile -->
+            <div class="robot-smile"></div>
+
+          </div>
+
+
+          <!-- Right ear / side -->
+          <div class="robot-ear">
+
+            <div class="ear-ring"></div>
+
+          </div>
+
+        </div>
+
+
+        <!-- ===== BODY ===== -->
+
+        <div class="robot-body">
+
+          <!-- Small chest sensor -->
+          <div class="robot-sensor"></div>
+
+          <!-- Body highlight -->
+          <div class="body-highlight"></div>
+
+        </div>
+
+
+        <!-- ===== LEFT ARM ===== -->
+
+        <div class="robot-arm robot-left-arm">
+
+          <div class="robot-hand">
+
+            <span></span>
+            <span></span>
+
+          </div>
+
+        </div>
+
+
+        <!-- ===== RIGHT ARM ===== -->
+
+        <div class="robot-arm robot-right-arm">
+
+          <div class="robot-hand">
+
+            <span></span>
+            <span></span>
+
+          </div>
+
+        </div>
+
+
+        <!-- ===== FLOATING BASE ===== -->
+
+        <div class="robot-base">
+
+          <div class="base-top"></div>
+
+          <div class="base-glow"></div>
+
+          <div class="base-bottom"></div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ============================= -->
+    <!-- SPEECH BUBBLE -->
+    <!-- ============================= -->
+
+    <div class="speech-bubble">
+
+      <p>
+        <strong>Hi, I'm EVA</strong> 👋
+      </p>
+
+      <p>
+        This is an AI-powered Syllabus Generation
+        application. I'll help you draft a complete,
+        editable course syllabus in seconds.
+      </p>
+
+    </div>
+
+
+    <!-- ============================= -->
+    <!-- CONTINUE BUTTON -->
+    <!-- ============================= -->
+
+    <button
+      id="intro-continue-btn"
+      class="btn btn-primary btn-lg"
+    >
+      Continue →
+    </button>
+
+  </div>
+
+</div>
+<div class="bg-glow bg-glow-1"></div>
+<div class="bg-glow bg-glow-2"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-icon">📘</span>
+    <div>
+      <h1>Syllabus Generation</h1>
+      <p>AI-powered academic syllabus builder</p>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- ============ INPUT FORM ============ -->
+  <section id="form-card" class="card form-card">
+    <h2 class="section-title">Course Details</h2>
+    <p class="section-sub">Fill in the basics — the AI will draft a complete, editable syllabus for you.</p>
+
+    <form id="syllabus-form">
+      <div class="grid-2">
+        <div class="field">
+          <label for="course_name">Course Name *</label>
+          <input type="text" id="course_name" placeholder="e.g. Cryptography and Network Security" required>
+        </div>
+        <div class="field">
+          <label for="course_code">Course Code</label>
+          <input type="text" id="course_code" placeholder="e.g. CS501">
+        </div>
+      </div>
+
+      <div class="grid-4">
+        <div class="field">
+          <label for="level">Level *</label>
+          <select id="level" required>
+            <option value="Undergraduate">Undergraduate</option>
+            <option value="Postgraduate">Postgraduate</option>
+            <option value="Diploma">Diploma</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="semester">Semester *</label>
+          <input type="text" id="semester" placeholder="e.g. V" required>
+        </div>
+        <div class="field">
+          <label for="credits">Credits *</label>
+          <input type="number" id="credits" min="1" max="10" placeholder="e.g. 3" required>
+        </div>
+        <div class="field">
+          <label for="duration_weeks">Duration (weeks) *</label>
+          <input type="number" id="duration_weeks" min="1" max="52" placeholder="e.g. 16" required>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="unit_count">Number of Units</label>
+          <select id="unit_count">
+            <option value="4">4</option>
+            <option value="5" selected>5</option>
+            <option value="6">6</option>
+            <option value="8">8</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="course_objectives">Course Objectives (rough notes — optional)</label>
+        <textarea id="course_objectives" rows="3" placeholder="Jot down a rough idea of what this course should cover. The AI will expand this into formal objectives."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="additional_requirements">Additional Requirements (optional)</label>
+        <textarea id="additional_requirements" rows="3" placeholder="Any specific topics to include, tools to cover, difficulty level, lab emphasis, etc."></textarea>
+      </div>
+
+      <button type="submit" id="generate-btn" class="btn btn-primary btn-lg">
+        <span class="btn-text">✨ Generate Syllabus</span>
+        <span class="btn-spinner" hidden></span>
+      </button>
+    </form>
+  </section>
+
+  <!-- ============ RESULT / EDIT VIEW ============ -->
+  <section id="result-section" hidden>
+
+    <div class="result-header card">
+      <div>
+        <h2 id="result-title" class="section-title">Generated Syllabus</h2>
+        <p id="ai-status" class="section-sub"></p>
+      </div>
+      <div class="result-actions">
+        <button id="edit-toggle-btn" class="btn btn-ghost">✏️ Edit Mode: <span id="edit-mode-label">On</span></button>
+        <button id="new-syllabus-btn" class="btn btn-ghost">↺ New Syllabus</button>
+        <button id="download-btn" class="btn btn-primary">⬇ Download DOCX</button>
+      </div>
+    </div>
+
+    <div id="syllabus-root"></div>
+
+  </section>
+
+  <div id="toast" class="toast" hidden></div>
+</main>
+
+<footer class="footer">
+  <p>Built for final-year major project submission · Syllabus Generation</p>
+</footer>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
