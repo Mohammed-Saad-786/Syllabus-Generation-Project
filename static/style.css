@@ -1421,3 +1421,21 @@ textarea { min-height: 70px; }
   }
 
 }
+#intro-text {
+  min-height: 75px;
+}
+
+#intro-text::after {
+  content: "|";
+  color: var(--accent-2);
+  animation: blink 0.7s infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+#intro-text {
+  color: #f1f2fb;
+}
