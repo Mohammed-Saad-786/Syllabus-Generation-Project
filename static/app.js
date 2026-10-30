@@ -26,6 +26,7 @@ const introOverlay =
 
 const introContinueBtn =
   document.getElementById("intro-continue-btn");
+  
 
 
 if (introContinueBtn && introOverlay) {
@@ -73,11 +74,56 @@ if (introContinueBtn && introOverlay) {
     el.style.height = el.scrollHeight + 2 + "px";
   }
 
+  function validateFormData(meta, courseObjectives, additionalRequirements) {
+  const credits = Number(meta.credits);
+  const duration = Number(meta.duration_weeks);
+  const unitCount = Number(meta.unit_count);
+
+  if (!meta.course_name || !meta.level || !meta.semester) {
+    return "Please fill in all required fields.";
+  }
+
+  if (!["Undergraduate", "Postgraduate", "Diploma"].includes(meta.level)) {
+    return "Please select a valid course level.";
+  }
+
+  if (!Number.isInteger(credits) || credits < 1 || credits > 10) {
+    return "Credits must be a whole number between 1 and 10.";
+  }
+
+  if (!Number.isInteger(duration) || duration < 1 || duration > 52) {
+    return "Duration must be a whole number between 1 and 52 weeks.";
+  }
+
+  if (![4, 5, 6, 8].includes(unitCount)) {
+    return "Please select a valid number of units.";
+  }
+
+  if (meta.course_name.length > 150) {
+    return "Course name cannot exceed 150 characters.";
+  }
+
+  if (meta.course_code.length > 40) {
+    return "Course code cannot exceed 40 characters.";
+  }
+
+  if (meta.semester.length > 50) {
+    return "Semester cannot exceed 50 characters.";
+  }
+
+  if (courseObjectives.length > 4000 || additionalRequirements.length > 4000) {
+    return "Objectives and additional requirements must not exceed 4000 characters each.";
+  }
+
+  return null;
+}
+
   // ---------------------------------------------------------------------
   // Form submit -> call /api/generate
   // ---------------------------------------------------------------------
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (!form.reportValidity()) return;
 
     const meta = {
       course_name: $("#course_name").value.trim(),
@@ -90,6 +136,17 @@ if (introContinueBtn && introOverlay) {
     };
     const course_objectives = $("#course_objectives").value.trim();
     const additional_requirements = $("#additional_requirements").value.trim();
+
+    const validationError = validateFormData(
+  meta,
+  course_objectives,
+  additional_requirements
+);
+
+if (validationError) {
+  showToast(validationError, true);
+  return;
+}
 
     if (!meta.course_name || !meta.level || !meta.semester || !meta.credits || !meta.duration_weeks) {
       showToast("Please fill in all required fields.", true);
