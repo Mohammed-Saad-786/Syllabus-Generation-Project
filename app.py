@@ -285,45 +285,222 @@ def generate_syllabus(data):
 
 
 def normalize_syllabus(result, data):
-    """Make sure the structure is always well-formed before it reaches the UI."""
+    """Validate and normalize AI/fallback syllabus output before displaying it."""
+
     unit_count = int(data.get("unit_count") or DEFAULT_UNIT_COUNT)
     numerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"][:unit_count]
 
-    result.setdefault("prerequisites", "")
-    result.setdefault("overview", "")
-    result.setdefault("objectives", [])
-    result.setdefault("outcomes", [])
-    result.setdefault("units", [])
-    result.setdefault("text_books", [])
-    result.setdefault("reference_books", [])
-    result.setdefault("electronic_resources", [])
+    # Use the existing fallback generator as a source of safe defaults.
+    baseline = fallback_generate(data)
 
-    units = result.get("units") or []
+    if not isinstance(result, dict):
+        result = {}
+
+    def safe_text(value, default=""):
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            return str(value)
+
+        return default
+
+    def safe_list(value, defaults):
+        if not isinstance(value, list):
+            value = []
+
+        cleaned = [
+            str(item).strip()
+            for item in value
+            if isinstance(item, (str, int, float))
+            and not isinstance(item, bool)
+            and str(item).strip()
+        ]
+
+        return cleaned if cleaned else list(defaults)
+
+    # Validate main syllabus sections.
+    for key in [
+        "prerequisites",
+        "overview",
+    ]:
+        result[key] = safe_text(
+            result.get(key),
+            baseline[key]
+        )
+
+    for key in [
+        "objectives",
+        "outcomes",
+        "text_books",
+        "reference_books",
+        "electronic_resources",
+    ]:
+        result[key] = safe_list(
+            result.get(key),
+            baseline[key]
+        )
+
+    # Validate units.
+    units = result.get("units")
+
+    if not isinstance(units, list):
+        units = []
+
     fixed_units = []
+
     for i, num in enumerate(numerals):
         if i < len(units) and isinstance(units[i], dict):
-            u = units[i]
+            unit = units[i]
         else:
-            u = {}
-        assignments = u.get("assignments") or []
-        while len(assignments) < 5:
-            assignments.append(f"Assignment on Unit {num} topics.")
-        unit_tests = u.get("unit_tests") or []
-        while len(unit_tests) < 2:
-            unit_tests.append(f"Discuss the key concepts of Unit {num}.")
-        fixed_units.append(
-            {
-                "number": u.get("number") or num,
-                "title": u.get("title") or f"Unit {num}",
-                "topics": u.get("topics") or "",
-                "assignments": assignments[:5],
-                "unit_tests": unit_tests[:2],
-            }
+            unit = {}
+
+        default_unit = baseline["units"][i]
+
+        assignments = safe_list(
+            unit.get("assignments"),
+            default_unit["assignments"]
         )
+
+        unit_tests = safe_list(
+            unit.get("unit_tests"),
+            default_unit["unit_tests"]
+        )
+
+        # Ensure exactly 5 assignments.
+        while len(assignments) < 5:
+            assignments.append(
+                default_unit["assignments"][len(assignments)]
+            )
+
+        assignments = assignments[:5]
+
+        # Ensure exactly 2 unit-test questions.
+        while len(unit_tests) < 2:
+            unit_tests.append(
+                default_unit["unit_tests"][len(unit_tests)]
+            )
+
+        unit_tests = unit_tests[:2]
+
+        fixed_units.append({
+            "number": safe_text(
+                unit.get("number"),
+                num
+            ),
+            "title": safe_text(
+                unit.get("title"),
+                default_unit["title"]
+            ),
+            "topics": safe_text(
+                unit.get("topics"),
+                default_unit["topics"]
+            ),
+            "assignments": assignments,
+            "unit_tests": unit_tests,
+        })
+
     result["units"] = fixed_units
+
     return result
 
+def validate_generation_data(data):
+    """Validate and normalize user input before syllabus generation."""
 
+    if not isinstance(data, dict):
+        return None, "Invalid request. Please submit valid course details."
+
+    text_limits = {
+        "course_name": 150,
+        "course_code": 40,
+        "level": 30,
+        "semester": 50,
+        "course_objectives": 4000,
+        "additional_requirements": 4000,
+    }
+
+    cleaned = {}
+
+    for field, max_length in text_limits.items():
+        value = data.get(field, "")
+
+        if value is None:
+            value = ""
+
+        if not isinstance(value, str):
+            return None, f"Invalid value provided for {field.replace('_', ' ')}."
+
+        value = value.strip()
+
+        if len(value) > max_length:
+            return None, (
+                f"{field.replace('_', ' ').capitalize()} "
+                f"cannot exceed {max_length} characters."
+            )
+
+        cleaned[field] = value
+
+    # Required text fields
+    required_fields = ["course_name", "level", "semester"]
+
+    for field in required_fields:
+        if not cleaned[field]:
+            return None, f"{field.replace('_', ' ').capitalize()} is required."
+
+    # Validate course level
+    allowed_levels = ["Undergraduate", "Postgraduate", "Diploma"]
+
+    if cleaned["level"] not in allowed_levels:
+        return None, "Please select a valid course level."
+
+    # Validate integer fields
+    integer_fields = {
+        "credits": (1, 10),
+        "duration_weeks": (1, 52),
+    }
+
+    for field, (minimum, maximum) in integer_fields.items():
+        value = data.get(field)
+
+        if isinstance(value, bool):
+            return None, f"{field.replace('_', ' ').capitalize()} must be a whole number."
+
+        try:
+            number = int(str(value).strip())
+        except (TypeError, ValueError):
+            return None, f"{field.replace('_', ' ').capitalize()} must be a whole number."
+
+        if str(value).strip() != str(number):
+            return None, f"{field.replace('_', ' ').capitalize()} must be a whole number."
+
+        if not minimum <= number <= maximum:
+            return None, (
+                f"{field.replace('_', ' ').capitalize()} "
+                f"must be between {minimum} and {maximum}."
+            )
+
+        cleaned[field] = number
+
+    # Validate number of units
+    unit_count = data.get("unit_count", DEFAULT_UNIT_COUNT)
+
+    if unit_count is None or str(unit_count).strip() == "":
+        unit_count = DEFAULT_UNIT_COUNT
+
+    if isinstance(unit_count, bool):
+        return None, "Please select a valid number of units."
+
+    try:
+        unit_count = int(str(unit_count).strip())
+    except (TypeError, ValueError):
+        return None, "Please select a valid number of units."
+
+    if unit_count not in [4, 5, 6, 8]:
+        return None, "Number of units must be 4, 5, 6, or 8."
+
+    cleaned["unit_count"] = unit_count
+
+    return cleaned, None
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
@@ -334,12 +511,15 @@ def index():
 
 @app.route("/api/generate", methods=["POST"])
 def api_generate():
-    data = request.get_json(force=True, silent=True) or {}
+    data = request.get_json(silent=True)
 
-    required = ["course_name", "level", "semester", "credits", "duration_weeks"]
-    missing = [f for f in required if not str(data.get(f, "")).strip()]
-    if missing:
-        return jsonify({"ok": False, "error": f"Missing required field(s): {', '.join(missing)}"}), 400
+    data, validation_error = validate_generation_data(data)
+
+    if validation_error:
+        return jsonify({
+            "ok": False,
+            "error": validation_error
+        }), 400
 
     syllabus, ai_used, warning = generate_syllabus(data)
     meta = {
